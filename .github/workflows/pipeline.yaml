@@ -1,0 +1,72 @@
+name: Deploy application
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: dwk-clster
+  GKE_ZONE: europe-north1-b
+  BE_IMAGE: todo-backend
+  APP_IMAGE: todo-app
+  BRDC_IMAGE: todo-broadcaster
+  CRON_IMAGE: todo-cron
+  BACKUP_IMAGE: backup-cron
+  NAMESPACE: ${{ github.ref_name == 'main' && 'default' || github.ref_name }}
+  BRANCH: ${{ github.ref_name }}
+  TAG: ${{ github.sha }}
+
+jobs:
+  build-publish-deploy:
+    name: Build, Publish and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GKE_SA_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: 'Use gcloud CLI'
+        run: gcloud info
+
+      - run: gcloud --quiet auth configure-docker
+
+      - name: 'Get GKE credentials'
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: '${{ env.GKE_CLUSTER }}'
+          project_id: '${{ env.PROJECT_ID }}'
+          location: '${{ env.GKE_ZONE }}'
+
+      - name: Build and publish backend
+        run: |-
+          docker build --tag "gcr.io/$PROJECT_ID/$BE_IMAGE:$TAG" ./backend
+          docker push "gcr.io/$PROJECT_ID/$BE_IMAGE:$TAG"
+
+      - name: Build and publish app
+        run: |-
+          docker build --tag "gcr.io/$PROJECT_ID/$APP_IMAGE:$TAG" ./app
+          docker push "gcr.io/$PROJECT_ID/$APP_IMAGE:$TAG"
+
+      - name: Build and broadcaster
+        run: |-
+          docker build --tag "gcr.io/$PROJECT_ID/$BRDC_IMAGE:$TAG" ./broadcaster
+          docker push "gcr.io/$PROJECT_ID/$BRDC_IMAGE:$TAG"
+
+      - name: Build and publish wikipedia cron
+        run: |-
+          docker build --tag "gcr.io/$PROJECT_ID/$CRON_IMAGE:$TAG" ./cron
+          docker push "gcr.io/$PROJECT_ID/$CRON_IMAGE:$TAG"
+
+      - name: Build and publish backup cron
+        run: |-
+          docker build --tag "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$BRANCH-$GITHUB_SHA" ./backup
+          docker push "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$BRANCH-$GITHUB_SHA"
