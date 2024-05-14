@@ -1,0 +1,25 @@
+<html>
+   <body>
+      <h1>Kube todo</h1>
+      <img src="/picture.jpg" alt="rndpic" width="200" height="200">
+
+      <form action="/todos" method="POST">
+         <input type="text" name="todo" maxlength="140" placeholder="Enter todo">
+         <button type="submit">Create</button>
+      </form>
+
+      <ul>
+         <% todos.forEach(function(todo) { %>
+            <li>
+               <%= todo.title %>
+               <% if (!todo.done) { %>
+                  <form action="/todos/<%= todo.id %>/done" method="POST" style="display: inline;">
+                     <button type="submit">Mark Done</button>
+                  </form>
+               <% } %>
+
+            </li>
+         <% }); %>
+      </ul>
+   </body>
+</html>
