@@ -2,7 +2,10 @@ const { Webhook } = require('discord-webhook-node');
 const NATS = require('nats')
 const sc = NATS.StringCodec();
 
+const environment = process.env.ENV
+
 const express = require('express');
+const e = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -44,7 +47,11 @@ const main = async () => {
 
     console.log(`${obj.status} todo '${obj.title}'`)
 
-    hook.send(`${obj.status} todo '${obj.title}'`)
+    if (environment === 'production') {
+      hook.send(`${obj.status} todo '${obj.title}'`)
+    } else {
+      console.log('skipping discord message in', environment)
+    }
   }
 }
 
