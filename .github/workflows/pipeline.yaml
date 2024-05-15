@@ -14,9 +14,8 @@ env:
   BRDC_IMAGE: todo-broadcaster
   CRON_IMAGE: todo-cron
   BACKUP_IMAGE: backup-cron
-  NAMESPACE: ${{ github.ref_name == 'main' && 'default' || github.ref_name }}
-  BRANCH: ${{ github.ref_name }}
-  TAG: ${{ github.sha }}
+  TAG: '1'
+  TAG2: ${{ github.sha }}
 
 jobs:
   build-publish-deploy:
@@ -68,5 +67,5 @@ jobs:
 
       - name: Build and publish backup cron
         run: |-
-          docker build --tag "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$BRANCH-$GITHUB_SHA" ./backup
-          docker push "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$BRANCH-$GITHUB_SHA"
+          docker build --tag "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$TAG" ./backup
+          docker push "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$TAG"
