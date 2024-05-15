@@ -18,8 +18,8 @@ env:
   TAG2: ${{ github.sha }}
 
 jobs:
-  build-publish-deploy:
-    name: Build, Publish and Deploy
+  build-publish:
+    name: Build, Publish
     runs-on: ubuntu-latest
 
     steps:
@@ -69,3 +69,32 @@ jobs:
         run: |-
           docker build --tag "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$TAG" ./backup
           docker push "gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$TAG"
+
+  mod-confs:
+    needs: [build-publish]
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout tools repo
+      uses: actions/checkout@v4
+      with:
+        repository: mluukkai/kproject-conf
+
+    - name: Set up Kustomize
+      uses: imranismail/setup-kustomize@v2
+
+    - name: create file
+      run: |
+        date > file.txt 
+
+    - name: Pushes to confs
+      uses: cpina/github-action-push-to-another-repository@main
+      env:
+        SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+      with:
+        source-directory: '.'
+        destination-github-username: 'mluukkai'
+        destination-repository-name: 'kproject-conf'
+        user-email: mluukkai@iki.fi
+        target-branch: main
