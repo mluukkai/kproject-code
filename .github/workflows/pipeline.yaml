@@ -85,7 +85,7 @@ jobs:
 
     - name: tag image
       run: kustomize edit set image PROJECT/BE_IMAGE="gcr.io/$PROJECT_ID/$BE_IMAGE:$TAG"
-      working-directory: overlays/prod
+      working-directory: base
 
     - name: Pushes to confs
       uses: cpina/github-action-push-to-another-repository@main
