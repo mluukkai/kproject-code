@@ -14,8 +14,7 @@ env:
   BRDC_IMAGE: todo-broadcaster
   CRON_IMAGE: todo-cron
   BACKUP_IMAGE: backup-cron
-  TAG: '1'
-  TAG2: ${{ github.sha }}
+  TAG: ${{ github.sha }}
 
 jobs:
   build-publish:
@@ -84,9 +83,9 @@ jobs:
     - name: Set up Kustomize
       uses: imranismail/setup-kustomize@v2
 
-    - name: create file
-      run: |
-        date > file.txt 
+    - name: tag image
+      run: kustomize edit set image PROJECT/BE_IMAGE="gcr.io/$PROJECT_ID/$BE_IMAGE:$TAG"
+      working-directory: overlays/prod
 
     - name: Pushes to confs
       uses: cpina/github-action-push-to-another-repository@main
