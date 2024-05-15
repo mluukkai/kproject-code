@@ -87,6 +87,9 @@ jobs:
       run: kustomize edit set image PROJECT/BE_IMAGE="gcr.io/$PROJECT_ID/$BE_IMAGE:$TAG"
       working-directory: base
 
+    - name: touch prod
+      run: touch overlays/prod/kustomization.yaml
+
     - name: Pushes to confs
       uses: cpina/github-action-push-to-another-repository@main
       env:
