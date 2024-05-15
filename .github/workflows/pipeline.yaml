@@ -3,7 +3,8 @@ name: Deploy application
 on:
   push:
     branches:
-      - main
+      - main     
+    tags: [ 'v*.*.*' ] 
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -83,7 +84,8 @@ jobs:
     - name: Set up Kustomize
       uses: imranismail/setup-kustomize@v2
 
-    - name: tag images
+    - name: update production images
+      if: ${{ startsWith(github.ref_name, 'v') }}
       run: |-
         kustomize edit set image PROJECT/BE_IMAGE="gcr.io/$PROJECT_ID/$BE_IMAGE:$TAG"
         kustomize edit set image PROJECT/APP_IMAGE="gcr.io/$PROJECT_ID/$APP_IMAGE:$TAG"
@@ -92,8 +94,18 @@ jobs:
         kustomize edit set image PROJECT/CRON_IMAGE="gcr.io/$PROJECT_ID/$CRON_IMAGE:$TAG"
         kustomize edit set image PROJECT/BACKUP_IMAGE="gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$TAG"
       working-directory: overlays/prod
+    
+    - name: upate staging images
+      if: ${{ !startsWith(github.ref_name, 'v') }}
+      run: |-
+        kustomize edit set image PROJECT/BE_IMAGE="gcr.io/$PROJECT_ID/$BE_IMAGE:$TAG"
+        kustomize edit set image PROJECT/APP_IMAGE="gcr.io/$PROJECT_ID/$APP_IMAGE:$TAG"
+        kustomize edit set image PROJECT/BRDC_IMAGE="gcr.io/$PROJECT_ID/$BRDC_IMAGE:$TAG"
+        kustomize edit set image PROJECT/BACKUP_IMAGE="gcr.io/$PROJECT_ID/$BACKUP_IMAGE:$TAG"
+        kustomize edit set image PROJECT/CRON_IMAGE="gcr.io/$PROJECT_ID/$CRON_IMAGE:$TAG"
+      working-directory: overlays/staging
 
-    - name: Pushes to confs
+    - name: push to confs
       uses: cpina/github-action-push-to-another-repository@main
       env:
         SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
