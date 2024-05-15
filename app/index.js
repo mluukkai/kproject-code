@@ -4,6 +4,8 @@ const app = express();
 
 let shell = require('shelljs');
 
+const environment = process.env.ENV
+
 const port = process.env.PORT || 3000;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
@@ -28,7 +30,7 @@ app.get('/', async (req, res) => {
   const request = await axios.get(BACKEND_URL);
   const todos = request.data;
   console.log('got todos...', todos.length)
-  res.render('index', { todos });
+  res.render('index', { todos, environment });
 });
 
 app.get('/ping', (req, res) => {
